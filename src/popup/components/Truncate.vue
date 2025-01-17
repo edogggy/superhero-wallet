@@ -3,6 +3,9 @@
     class="truncate"
     :class="{ right }"
   >
+    <span class="center-vertically">
+      <slot name="before-address" />
+    </span>
     <span
       ref="container"
       class="container"
@@ -27,6 +30,9 @@
       class="domain"
       v-text="AE_AENS_DOMAIN"
     />
+    <span class="center-vertically">
+      <slot name="after-address" />
+    </span>
   </div>
 </template>
 
@@ -175,6 +181,11 @@ export default defineComponent({
 
   .domain {
     word-break: keep-all;
+  }
+
+  .center-vertically {
+    display: flex;
+    align-items: center;
   }
 
   @keyframes animationTruncate {

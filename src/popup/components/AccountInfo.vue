@@ -28,15 +28,34 @@
         class="account-name"
       >
         <ion-skeleton-text v-if="isLoading" animated />
-        <Truncate v-if="!isLoading" :str="name" />
+        <Truncate v-if="!isLoading" :str="name">
+          <template #before-address>
+            <Component
+              :is="type && getAccountIcon(type)"
+              class="account-type-icon"
+            />
+          </template>
+          <template #after-address>
+            <slot name="after-address" />
+          </template>
+        </Truncate>
       </div>
       <Truncate
         v-else
         data-cy="account-name-number"
         class="account-name"
         :str="getDefaultAccountLabel(account)"
-      />
-
+      >
+        <template #before-address>
+          <Component
+            :is="type && getAccountIcon(type)"
+            class="account-type-icon"
+          />
+        </template>
+        <template #after-address>
+          <slot name="after-address" />
+        </template>
+      </Truncate>
       <slot name="address">
         <CopyText
           v-if="address?.length"
@@ -72,11 +91,12 @@ import type { IAccount } from '@/types';
 import { getDefaultAccountLabel } from '@/utils';
 import { ProtocolAdapterFactory } from '@/lib/ProtocolAdapterFactory';
 import { useAeNames } from '@/protocols/aeternity/composables/aeNames';
+import { useAccounts } from '@/composables';
 
-import Avatar, { type AvatarSize } from './Avatar.vue';
-import CopyText from './CopyText.vue';
-import Truncate from './Truncate.vue';
-import AddressTruncated from './AddressTruncated.vue';
+import Avatar, { type AvatarSize } from '@/popup/components/Avatar.vue';
+import CopyText from '@/popup/components/CopyText.vue';
+import Truncate from '@/popup/components/Truncate.vue';
+import AddressTruncated from '@/popup/components/AddressTruncated.vue';
 
 export default defineComponent({
   components: {
@@ -102,6 +122,7 @@ export default defineComponent({
   },
   setup(props) {
     const { getName, getNameByNameHash } = useAeNames();
+    const { getAccountIcon, getAccountByAddress } = useAccounts();
 
     const isLoading = ref(true);
     const resolvedChainName = ref('');
@@ -111,6 +132,7 @@ export default defineComponent({
       || props.customName
       || getName(address.value).value
     ));
+    const type = computed(() => getAccountByAddress(props.account.address!)?.type);
 
     const explorerUrl = computed(
       () => (props.account.protocol)
@@ -136,8 +158,10 @@ export default defineComponent({
 
     return {
       name: resolvedChainName.value || name,
+      type,
       address,
       explorerUrl,
+      getAccountIcon,
       getDefaultAccountLabel,
       isLoading,
     };
@@ -212,6 +236,12 @@ export default defineComponent({
     width: 150px;
     height: 16px;
     margin: 0 0 4px 0;
+  }
+
+  .account-type-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
   }
 }
 </style>
